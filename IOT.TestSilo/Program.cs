@@ -26,7 +26,9 @@ namespace IOT.TestSilo
         {
             try
             {
-                var host = await StartSilo();
+                var host = BuildSilo();
+
+                await host.StartAsync();
 
                 Console.WriteLine("\n\n Press Enter to terminate...\n\n");
                 Console.ReadLine();
@@ -42,42 +44,21 @@ namespace IOT.TestSilo
             }
         }
 
-        private static async Task<ISiloHost> StartSilo()
+        private static ISiloHost BuildSilo()
         {
-            bool myMemberComesFromInterface = typeof(DeviceGrain).GetInterfaces()
-    .SelectMany(i => i.GetMember("SetTemperature")).Any();
-            // define the cluster configuration
             var builder = new SiloHostBuilder()
                 .UseLocalhostClustering()
-                  .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
-
+               
+                .ConfigureLogging(logging => logging.AddConsole())
+                     .UseDashboard(options => { })
+                .AddMemoryGrainStorageAsDefault()
                 .AddMemoryGrainStorage("OrleansMemoryProvider")
-                 .AddMemoryGrainStorageAsDefault()
-                .Configure<ClusterOptions>(options =>
-                {
-                    options.ClusterId = "dev";
-                    options.ServiceId = "OrleansBasics";
-                })
-                 .UseEnvironment("Dev")
-                                   .UseDashboard(options => { })
-                //        .ConfigureApplicationParts(parts => parts.AddFromApplicationBaseDirectory())
-                .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(DeviceGrain).Assembly).WithReferences())
-                // .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IAddressable).Assembly).WithReferences())
-                // .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(ILifecycleParticipant<>).Assembly).WithReferences())
-                //.ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IGrainWithGuidKey).Assembly).WithReferences())
-                // .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IGrain).Assembly).WithReferences())
-                //             .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IGrainStorage).Assembly).WithReferences())
-                //     .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(MemoryGrainStorage).Assembly).WithReferences())
+                 .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(DeviceGrain).Assembly).WithReferences())
+                  .UseInMemoryReminderService()
+            //    .AddMemoryStreams<IDeviceGrainState>("",null)
+               ;
 
-                //     .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(StorageProvider).Assembly).WithReferences())
-                //    .ConfigureApplicationParts(parts => parts.AddFeatureProvide(();
-                .ConfigureLogging(logging => logging.AddConsole());
-
-
-            var host = builder.Build();
-
-            await host.StartAsync();
-            return host;
+            return builder.Build();
         }
     }
 }

@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace IOT.GrainInterfaces
 {
-    public interface IDeviceGrainState : IGrainState
+    public class DeviceGrainState 
     {
-        double Lastvaue { get; set; }
+        public double Lastvaue { get; set; }
 
     }
     public interface IDeviceGrain:IGrainWithGuidKey

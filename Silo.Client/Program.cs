@@ -7,6 +7,10 @@ using Orleans.Core;
 using Orleans.Runtime;
 using Orleans.Storage;
 using System;
+
+
+using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace Silo.Client
@@ -42,29 +46,25 @@ namespace Silo.Client
 
         private static async Task<IClusterClient> ConnectClient()
         {
-            IClusterClient client;
-            client = new ClientBuilder()
-                .UseLocalhostClustering()
+            var endPoints = new List<IPEndPoint>();
 
-                  .Configure<ClusterOptions>(options =>
-                  {
-                      options.ClusterId = "dev";
-                      options.ServiceId = "OrleansBasics";
-                  })
-               //   .ConfigureApplicationParts(parts => parts.AddFromApplicationBaseDirectory())
+            var ipAddress = IPAddress.Loopback;
+            var port = 30000;
+
+            endPoints.Add(new IPEndPoint(ipAddress, port));
+
+            var client = new ClientBuilder()
+                .Configure<ClusterOptions>(options =>
+                {
+                    options.ClusterId = "SimpleSample";
+                    options.ServiceId = "SimpleSample";
+                })
+               
                 .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IDeviceGrain).Assembly).WithReferences())
-                  //  .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IAddressable).Assembly).WithReferences())
-                  // .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(ILifecycleParticipant<>).Assembly).WithReferences())
-                  //.ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IGrainWithGuidKey).Assembly).WithReferences())
-                  // .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IGrain).Assembly).WithReferences())
-                  //   .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IGrainStorage).Assembly).WithReferences())
-                  //     .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(MemoryGrainStorage).Assembly).WithReferences())
-                .ConfigureLogging(logging => logging.AddConsole())
+                .UseStaticClustering(endPoints.ToArray())
                 .Build();
-          
 
             await client.Connect();
-            Console.WriteLine("Client successfully connected to silo host \n");
             return client;
         }
 
@@ -72,16 +72,16 @@ namespace Silo.Client
         {
             var strGuid = Guid.NewGuid();
 
-          //  var temp = Console.ReadLine();
-            
-         //   int.TryParse(temp, out int tempData);
+          
             // example of calling grains from the initialized client
             var grain = client.GetGrain<IDeviceGrain>(strGuid);
-           // var grain = IGrainFactory.GetGrain<IDeviceGrain>(strGuid);
-            // while (true)
+          //  var grain = IGrainFactory.GetGrain<IDeviceGrain>(strGuid);
+             while (true)
             {
+                var temp = Console.ReadLine();
 
-                await grain.SetTemperature(1);
+                int.TryParse(temp, out int tempData);
+                await grain.SetTemperature(tempData);
             }
             // Console.WriteLine($"\n\n{response}\n\n");
         }

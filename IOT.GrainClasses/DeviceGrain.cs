@@ -9,10 +9,8 @@ namespace IOT.GrainClasses
 
    
     [StorageProvider(ProviderName = "OrleansMemoryProvider")]
-    public class DeviceGrain : Grain<IDeviceGrainState>,IDeviceGrain
-    {
-      
-
+    public class DeviceGrain : Grain<DeviceGrainState>, IDeviceGrain
+    { 
         public override Task OnActivateAsync()
         {
             var id = this.GetGrainIdentity();
@@ -23,7 +21,7 @@ namespace IOT.GrainClasses
         public  Task SetTemperature(double value)
         {
             Console.WriteLine("Temperature recorded {0}", value);
-            if (this.State.Lastvaue < 100 && value > 100)
+            if (State.Lastvaue < 100 && value > 100)
             {
                 Console.WriteLine("High Temperature recorded {0}", value);
             }
