@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<OrleansConfiguration xmlns="urn:orleans">
+  <Globals>
+<Provider Type="Orleans.Storage.MemoryStorage"
+         Name="OrleansMemoryProvider" />
+  </Globals>
+</OrleansConfiguration>
