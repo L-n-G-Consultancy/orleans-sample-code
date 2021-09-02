@@ -57,8 +57,8 @@ namespace IOT.TestSilo
 
             IPEndPoint iPEndPoint = new IPEndPoint(ipaddress.Address, orleansConfig.SiloPort);
             var builder = new SiloHostBuilder()
-               // .UseLocalhostClustering()
-               .UseDevelopmentClustering(iPEndPoint)
+                .UseLocalhostClustering()
+              // .UseDevelopmentClustering(iPEndPoint)
                
                 .ConfigureLogging(logging => logging.AddConsole())
                      .UseDashboard(options => { })
