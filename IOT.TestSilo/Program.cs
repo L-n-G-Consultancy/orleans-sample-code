@@ -4,6 +4,7 @@ using System.Net;
 using System.Threading.Tasks;
 using IOT.GrainClasses;
 using IOT.GrainInterfaces;
+using IOT.SiloHost;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Configuration;
@@ -11,6 +12,9 @@ using Orleans.Core;
 using Orleans.Hosting;
 using Orleans.Runtime;
 using Orleans.Storage;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using static IOT.SiloHost.ConsoleAppConfigurator;
 
 namespace IOT.TestSilo
 {
@@ -19,14 +23,17 @@ namespace IOT.TestSilo
 
         public static int Main(string[] args)
         {
-            return RunMainAsync().Result;
+            var (env, configurationRoot, orleansConfig) =
+            ConsoleAppConfigurator.BootstrapConfigurationRoot();
+
+            return RunMainAsync(args, env, configurationRoot, orleansConfig).Result;
         }
 
-        private static async Task<int> RunMainAsync()
+        private static async Task<int> RunMainAsync(string[] args, string env, IConfigurationRoot configurationRoot, OrleansConfig orleansConfig)
         {
             try
             {
-                var host = BuildSilo();
+                var host = BuildSilo(env ,orleansConfig);
 
                 await host.StartAsync();
 
@@ -44,10 +51,14 @@ namespace IOT.TestSilo
             }
         }
 
-        private static ISiloHost BuildSilo()
+        private static ISiloHost BuildSilo(string env, OrleansConfig orleansConfig)
         {
+            System.Net.IPAddress ipaddress = System.Net.IPAddress.Parse(orleansConfig.NodeIpAddresses[1].ToString());
+
+            IPEndPoint iPEndPoint = new IPEndPoint(ipaddress.Address, orleansConfig.SiloPort);
             var builder = new SiloHostBuilder()
-                .UseLocalhostClustering()
+               // .UseLocalhostClustering()
+               .UseDevelopmentClustering(iPEndPoint)
                
                 .ConfigureLogging(logging => logging.AddConsole())
                      .UseDashboard(options => { })
@@ -55,6 +66,13 @@ namespace IOT.TestSilo
                 .AddMemoryGrainStorage("OrleansMemoryProvider")
                  .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(DeviceGrain).Assembly).WithReferences())
                   .UseInMemoryReminderService()
+                  .ConfigureEndpoints(ipaddress, orleansConfig.SiloPort, orleansConfig.GatewayPort,false)
+                  .UseEnvironment("dev")
+                   .Configure<ClusterOptions>(options =>
+                   {
+                       options.ClusterId = "SimpleSample";
+                       options.ServiceId = "SimpleSample";
+                   })
             //    .AddMemoryStreams<IDeviceGrainState>("",null)
                ;
 
